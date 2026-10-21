@@ -160,9 +160,17 @@ main{flex:1;width:100%;max-width:640px;margin:0 auto;padding-left:max(16px,env(s
 .totals .big{font-size:20px;font-weight:800;padding-top:6px;border-top:1px solid var(--line)}
 form{display:grid;gap:14px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.f{display:grid;gap:6px;min-width:0}
+.f{display:grid;gap:6px;min-width:0;align-content:start}
 label{font-weight:800;font-size:13.5px}
-input,select,textarea{font:16px var(--f-body);padding:12px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);width:100%;min-width:0}
+input,select,textarea{font:16px var(--f-body);padding:12px;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);width:100%;min-width:0;max-width:100%}
+input,select{height:50px}
+input[type=date]{-webkit-appearance:none;appearance:none;display:block;text-align:left;line-height:24px}
+input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
+input[type=file]{height:auto}
+.mapopts{display:grid;gap:10px}
+.mapbtn{display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);border-radius:14px;padding:14px;text-decoration:none;color:var(--ink);font-weight:700;background:var(--bg)}
+.mapbtn svg{width:22px;height:22px;fill:none;stroke:var(--ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+button.li{width:100%;background:none;border:0;border-bottom:1px solid var(--line);text-align:left;cursor:pointer;font:inherit}
 textarea{min-height:84px;resize:vertical}
 input:focus,select:focus,textarea:focus{border-color:var(--ink);outline:none}
 .hint{font-size:12.5px;color:var(--muted)}
@@ -228,6 +236,8 @@ const zl=n=>Number.isInteger(n)?n+" zł":n.toFixed(2).replace(".",",")+" zł";
 
 /* ---------- data (z cennika Słowianki) ---------- */
 const FB="https://www.facebook.com/search/top?q=S%C5%82owianka%20caf%C3%A9", IG="https://www.instagram.com/slowianka.cafe/";
+const MAPQ=encodeURIComponent("Słowianka café, Słowiańska 42A, 61-664 Poznań");
+const GMAP="https://www.google.com/maps/search/?api=1&query="+MAPQ, AMAP="https://maps.apple.com/?q="+MAPQ;
 const HOURS=[null,[10,17],[10,17],[10,17],[10,17],[9.5,16],[10,16]]; // index = (day+6)%7 → Pn..Nd ; Pn zamknięte
 const DAYN=["Poniedziałek","Wtorek","Środa","Czwartek","Piątek","Sobota","Niedziela"];
 const hh=x=>`${Math.floor(x)}:${x%1?"30":"00"}`;
@@ -376,7 +386,12 @@ function drawSheet(){const {p,opt,qty}=sh;const o=p.opts[opt];
 function closeSheet(){$("#scrim").classList.remove("show");$("#sheet").classList.remove("show");sh=null}
 $("#scrim").addEventListener("click",closeSheet);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&sh)closeSheet()});
+function openMap(){sh={map:true};$("#sheet").innerHTML=`<div class="grab"></div><h3 id="shTitle">Jak dojechać?</h3><p class="sub">ul. Słowiańska 42A, 61-664 Poznań (Winogrady)</p>
+  <div class="mapopts"><a class="mapbtn" href="${GMAP}" target="_blank" rel="noopener" data-close>${svg("pin")}Otwórz w Google Maps</a><a class="mapbtn" href="${AMAP}" target="_blank" rel="noopener" data-close>${svg("pin")}Otwórz w Apple Maps</a></div>
+  <button class="btn ghost block" data-close type="button">Anuluj</button>`;$("#scrim").classList.add("show");$("#sheet").classList.add("show")}
+document.addEventListener("click",e=>{if(e.target.closest("[data-map]"))openMap()});
 $("#sheet").addEventListener("click",e=>{const t=e.target;
+  if(t.closest("[data-close]")){setTimeout(closeSheet,50);return}
   const o=t.closest("[data-opt]");if(o){sh.opt=+o.dataset.opt;drawSheet();return}
   const f=t.closest("[data-fruit]");if(f){sh.fruit=f.dataset.fruit;drawSheet();return}
   const q=t.closest("[data-q]");if(q){sh.qty=Math.max(sh.p.min,Math.min(50,sh.qty+(+q.dataset.q)));drawSheet();return}
@@ -446,7 +461,7 @@ function Info(){
    </div>
    <div class="card"><p class="label" style="margin-bottom:10px">Godziny otwarcia</p><div class="htab">${DAYN.map((d,i)=>`<span class="${i===today?"today":""}">${d}</span><span class="${i===today?"today":""}">${HOURS[i]?hh(HOURS[i][0])+"–"+hh(HOURS[i][1]):"nieczynne"}</span>`).join("")}</div></div>
    <div class="card">
-    <div class="li"><i>${svg("pin")}</i><div><b>Słowianka Café</b><small>Poznań, Winogrady</small></div><span></span></div>
+    <button type="button" class="li" data-map><i>${svg("pin")}</i><div><b>Słowianka Café</b><small>ul. Słowiańska 42A, 61-664 Poznań · pokaż na mapie</small></div><span>›</span></button>
     <a class="li" href="${IG}" target="_blank" rel="noopener"><i>${svg("cam")}</i><div><b>Instagram @slowianka.cafe</b><small>Nowości, weekendy cynamonkowe, torty</small></div><span>›</span></a>
     <a class="li" href="${FB}" target="_blank" rel="noopener"><i>${svg("chat")}</i><div><b>Facebook Słowianka café</b><small>Wiadomości i zamówienia</small></div><span>›</span></a>
    </div>
